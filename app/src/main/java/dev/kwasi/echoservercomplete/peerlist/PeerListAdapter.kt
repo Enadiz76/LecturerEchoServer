@@ -27,7 +27,7 @@ class PeerListAdapter(private val iFaceImpl:PeerListAdapterInterface): RecyclerV
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val peer = peersList[position]
-//        val ids = studentIds[position]
+        val ids = studentIds[position]
 
         holder.titleTextView.text = peer.deviceName
         holder.connectButtonView.text = peer.deviceAddress
