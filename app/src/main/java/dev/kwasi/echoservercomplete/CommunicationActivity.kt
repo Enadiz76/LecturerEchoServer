@@ -66,13 +66,19 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
         val channel = manager.initialize(this, mainLooper, null)
         wfdManager = WifiDirectManager(manager, channel, this)
 
-        getIdsList()
+//        getIdsList()
 
 //            get a list of connecting devices
-//        peerListAdapter = PeerListAdapter(this)
-//        val rvPeerList: RecyclerView= findViewById(R.id.rvPeerListing)
-//        rvPeerList.adapter = peerListAdapter
-//        rvPeerList.layoutManager = LinearLayoutManager(this)
+        peerListAdapter = PeerListAdapter(this)
+        val rvPeerList: RecyclerView= findViewById(R.id.rvStudentListing)
+        if(rvPeerList != null){
+            rvPeerList.adapter = peerListAdapter
+            rvPeerList.layoutManager = LinearLayoutManager(this)
+        }else{
+            val toast = Toast.makeText(this, "The recycler view is null", Toast.LENGTH_SHORT)
+            toast.show()
+        }
+
 
 //        get the list of incoming conversations
         chatListAdapter = ChatListAdapter()
@@ -134,31 +140,23 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
     }
 
     @SuppressLint("SetTextI18n")
-    private fun updateUI(){
-        //The rules for updating the UI are as follows:
-        // IF the WFD adapter is NOT enabled then
-        //      Show UI that says turn on the wifi adapter
-        // ELSE IF there is NO WFD connection then i need to show a view that allows the user to either
-            // 1) create a group with them as the group owner OR
-            // 2) discover nearby groups
-        // ELSE IF there are nearby groups found, i need to show them in a list
-        // ELSE IF i have a WFD connection i need to show a chat interface where i can send/receive messages
-        val wfdAdapterErrorView:ConstraintLayout = findViewById(R.id.clWfdAdapterDisabled)
+    private fun updateUI() {
+        val wfdAdapterErrorView: ConstraintLayout = findViewById(R.id.clWfdAdapterDisabled)
         wfdAdapterErrorView.visibility = if (!wfdAdapterEnabled) View.VISIBLE else View.GONE
 
-        val wfdNoConnectionView:ConstraintLayout = findViewById(R.id.clNoWifiDirectConnection)
+        val wfdNoConnectionView: ConstraintLayout = findViewById(R.id.clNoWifiDirectConnection)
         wfdNoConnectionView.visibility = if (wfdAdapterEnabled && !wfdHasConnection) View.VISIBLE else View.GONE
 
-//        val rvPeerList: RecyclerView= findViewById(R.id.rvStudentListing)
-//        rvPeerList.visibility = if (wfdAdapterEnabled && !wfdHasConnection && hasDevices) View.VISIBLE else View.GONE
+        val rvPeerList: RecyclerView? = findViewById(R.id.rvStudentListing)
+        rvPeerList?.visibility = if (wfdAdapterEnabled && hasDevices) View.VISIBLE else View.GONE
 
-        val wfdConnectedView:ConstraintLayout = findViewById(R.id.clHasConnection)
-        wfdConnectedView.visibility = if(wfdHasConnection)View.VISIBLE else View.GONE
+        val wfdConnectedView: ConstraintLayout = findViewById(R.id.clHasConnection)
+        wfdConnectedView.visibility = if (wfdHasConnection) View.VISIBLE else View.GONE
 
-        if(wfdHasConnection){
+        if (wfdHasConnection) {
             val classNetworkAdapter: TextView = findViewById(R.id.ClassSSID)
             val networkAdapter: TextView = findViewById(R.id.NetworkPassword)
-            classNetworkAdapter.text= "Class SSID: " + wfdManager?.groupInfo?.networkName
+            classNetworkAdapter.text = "Class SSID: " + wfdManager?.groupInfo?.networkName
             networkAdapter.text = "Network Password: " + wfdManager?.groupInfo?.passphrase
         }
     }
