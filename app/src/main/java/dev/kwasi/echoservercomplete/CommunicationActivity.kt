@@ -42,7 +42,7 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
 
     private var peerListAdapter:PeerListAdapter? = null
     private var chatListAdapter:ChatListAdapter? = null
-    private var studentAdapter:MySimpleArrayAdapter? = null
+//    private var studentAdapter:MySimpleArrayAdapter? = null
 
     private var wfdAdapterEnabled = false
     private var wfdHasConnection = false
@@ -66,13 +66,13 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
         val channel = manager.initialize(this, mainLooper, null)
         wfdManager = WifiDirectManager(manager, channel, this)
 
-        getIdsList()
+//        getIdsList()
 
 //            get a list of connecting devices
-//        peerListAdapter = PeerListAdapter(this)
-//        val rvPeerList: RecyclerView= findViewById(R.id.rvPeerListing)
-//        rvPeerList.adapter = peerListAdapter
-//        rvPeerList.layoutManager = LinearLayoutManager(this)
+        peerListAdapter = PeerListAdapter(this)
+        val rvPeerList: RecyclerView= findViewById(R.id.rvStudentListing)
+        rvPeerList.adapter = peerListAdapter
+        rvPeerList.layoutManager = LinearLayoutManager(this)
 
 //        get the list of incoming conversations
         chatListAdapter = ChatListAdapter()
@@ -149,8 +149,8 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
         val wfdNoConnectionView:ConstraintLayout = findViewById(R.id.clNoWifiDirectConnection)
         wfdNoConnectionView.visibility = if (wfdAdapterEnabled && !wfdHasConnection) View.VISIBLE else View.GONE
 
-//        val rvPeerList: RecyclerView= findViewById(R.id.rvStudentListing)
-//        rvPeerList.visibility = if (wfdAdapterEnabled && !wfdHasConnection && hasDevices) View.VISIBLE else View.GONE
+        val rvPeerList: RecyclerView= findViewById(R.id.rvStudentListing)
+        rvPeerList.visibility = if (wfdAdapterEnabled && hasDevices) View.VISIBLE else View.GONE
 
         val wfdConnectedView:ConstraintLayout = findViewById(R.id.clHasConnection)
         wfdConnectedView.visibility = if(wfdHasConnection)View.VISIBLE else View.GONE
@@ -240,7 +240,7 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
     override fun onContent(content: ContentModel) {
         runOnUiThread{
             chatListAdapter?.addItemToEnd(content)
-            val  newStudent = Student(content. senderIp,"Petunia")
+//            val  newStudent = Student(content. senderIp,"Petunia")
 
             updateUI()
         }
