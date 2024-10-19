@@ -73,7 +73,8 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
     private val clientMap: HashMap<String, Socket> = HashMap()
 //    private val serverContent: ContentModel
 //    private lateinit var writer: BufferedWriter
-    private lateinit var tempval: String
+    private val studentIds = arrayOf("816117992","816035550")
+    private var tempStudent  = ""
 
     init {
         thread{
@@ -92,7 +93,6 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
         }
     }
 
-
     private fun handleSocket(socket: Socket){
         socket.inetAddress.hostAddress?.let {
             clientMap[it] = socket
@@ -105,32 +105,47 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
                 while(socket.isConnected){
                     try{
                         receivedJson = clientReader.readLine()
-                        tempval = receivedJson
+                            if (receivedJson!= null){
+                                Log.e("SERVER", "Received a message from client $it")
+                                val clientContent = Gson().fromJson(receivedJson, ContentModel::class.java)
+                                if(clientContent.message == "I am here"){
+                                    val clientNonce = (0..1000000).random()
+                                    val challengeMsg = ContentModel(clientNonce.toString(), "192.168.49.1")
+                                    val chalStr = Gson().toJson(challengeMsg)
 
+                                    clientWriter.write("$chalStr\n")
+                                    clientWriter.flush()
 
-//                        Get the message then search in it for id
+                                    // To show the correct alignment of the items (on the server), I'd swap the IP that it came from the client
+                                    // This is some OP hax that gets the job done but is not the best way of getting it done.
+                                    val tmpIp = clientContent.senderIp
+                                    clientContent.senderIp = challengeMsg.senderIp
+                                    challengeMsg.senderIp = tmpIp
 
-//                        if id in receivedJson, store to value else close
-//                        val decryptedText = decryptMessage(receivedJson,value, decryption key )
-                        if (receivedJson!= null){
-                            Log.e("SERVER", "Received a message from client $it")
-                            val clientContent = Gson().fromJson(receivedJson, ContentModel::class.java)
-                            val reversedContent = ContentModel(clientContent.message.reversed(), "192.168.49.1")
+                                    iFaceImpl.onContent(clientContent)
+                                    iFaceImpl.onContent(challengeMsg)
 
-                            val reversedContentStr = Gson().toJson(reversedContent)
-                            clientWriter.write("$reversedContentStr\n")
-                            clientWriter.flush()
+                                    for (student in studentIds){
+                                        val studentHash = hashStrSha256(student)
+                                        val studentKey = generateAESKey(studentHash)
+                                        val studentIv = IvParameterSpec(studentHash.toByteArray())
+                                        val challengeNonce = challengeMsg.message.toString()
+                                        val checkMsg = decryptMessage(clientContent.message, studentKey, studentIv)
 
-                            // To show the correct alignment of the items (on the server), I'd swap the IP that it came from the client
-                            // This is some OP hax that gets the job done but is not the best way of getting it done.
-                            val tmpIp = clientContent.senderIp
-                            clientContent.senderIp = reversedContent.senderIp
-                            reversedContent.senderIp = tmpIp
+                                        if(challengeNonce == checkMsg){
+                                            tempStudent = student
+                                            val displayMsg = ContentModel(checkMsg, "192.168.49.1")
+                                        }else{
+                                            break
+                                        }
 
-                            iFaceImpl.onContent(clientContent)
-                            iFaceImpl.onContent(reversedContent)
-
-                        }
+                                        if (hashStrSha256(student) == clientContent.message){
+                                            tempStudent = student
+                                            break
+                                        }
+                                    }
+                                }
+                            }
                     } catch (e: Exception){
                         Log.e("SERVER", "An error has occurred with the client $it")
                         e.printStackTrace()
@@ -157,7 +172,7 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
             writer.write("$contentAsStr\n")
             writer.flush()
 
-            val clientContent = Gson().fromJson(tempval, ContentModel::class.java)
+            val clientContent = Gson().fromJson(tempStudent, ContentModel::class.java)
             val moddedContent = ContentModel(clientContent.message, "192.168.49.1")
 
 

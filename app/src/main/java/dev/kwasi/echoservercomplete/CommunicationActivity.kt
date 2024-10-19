@@ -118,6 +118,7 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
             unregisterReceiver(it)
         }
     }
+
     fun createGroup(view: View) {
         wfdManager?.createGroup()
         updateUI()
@@ -125,12 +126,8 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
 
     fun endGroup(){
         wfdManager?.disconnect()
+        server?.close()
         updateUI()
-    }
-
-    fun getPeers(){
-        println(wfdManager?.groupInfo?.clientList)
-//        updateUI()
     }
 
     @SuppressLint("SetTextI18n")
@@ -178,6 +175,22 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
         val sString = sMessage.text.toString()
         val serverContent = ContentModel(sString, deviceIp)
         sMessage.text.clear()
+        server?.sendMessage(serverContent)
+        chatListAdapter?.addItemToEnd(serverContent)
+    }
+
+    fun askQuestion(view: View) {
+        // Clear the chat list
+//        chatListAdapter?.
+
+        // Start a new conversation with the selected device
+        val selectedDevice = view.tag as? WifiP2pDevice
+        selectedDevice?.let {
+            wfdManager?.connectToPeer(it)
+        }
+
+        val message = "Starting a new conversation with ${selectedDevice?.deviceName}"
+        val serverContent = ContentModel(message, deviceIp)
         server?.sendMessage(serverContent)
         chatListAdapter?.addItemToEnd(serverContent)
     }
@@ -241,9 +254,8 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
         runOnUiThread{
             chatListAdapter?.addItemToEnd(content)
 //            val  newStudent = Student(content. senderIp,"Petunia")
-
-            updateUI()
         }
+        updateUI()
     }
 
 }
