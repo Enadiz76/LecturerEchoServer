@@ -71,8 +71,6 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
 
     private val svrSocket: ServerSocket = ServerSocket(PORT, 0, InetAddress.getByName("192.168.49.1"))
     private val clientMap: HashMap<String, Socket> = HashMap()
-//    private val serverContent: ContentModel
-//    private lateinit var writer: BufferedWriter
     private val studentIds = arrayOf("816117992","816035550")
     private var tempStudent  = ""
     private var ip = ""
@@ -94,6 +92,7 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
         }
     }
 
+//    handles the socket connection
     private fun handleSocket(socket: Socket) {
         socket.inetAddress.hostAddress?.let {
             clientMap[it] = socket
@@ -128,7 +127,7 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
                                 for (student in studentIds) {
                                     val studentHash = hashStrSha256(student)
                                     val studentKey = generateAESKey(studentHash)
-                                    val studentIv = IvParameterSpec(studentHash.toByteArray())
+                                    val studentIv = IvParameterSpec(studentHash.toByteArray().copyOf(16))
                                     val challengeNonce = challengeMsg.message.toString()
                                     val checkMsg = decryptMessage(clientContent.message, studentKey, studentIv)
 
@@ -145,6 +144,15 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
                                         break
                                     }
                                 }
+                            }
+//                            else take the client content message and see if it matches the student id when decrypted
+                            else {
+                                val studentHash = hashStrSha256(tempStudent)
+                                val studentKey = generateAESKey(studentHash)
+                                val studentIv = IvParameterSpec(studentHash.toByteArray())
+                                val decryptedMessage = decryptMessage(clientContent.message, studentKey, studentIv)
+                                val decryptedContent = clientContent.copy(message = decryptedMessage)
+                                iFaceImpl.onContent(decryptedContent)
                             }
                         }
                     } catch (e: Exception) {
@@ -165,10 +173,18 @@ class Server(private val iFaceImpl:NetworkMessageInterface) {
         thread {
             try {
                 val contentAsStr: String = Gson().toJson(content)
+                //encrypt the message
+                val studentHash = hashStrSha256(tempStudent)
+                val studentKey = generateAESKey(studentHash)
+                val studentIv = IvParameterSpec(studentHash.toByteArray().copyOf(16))
+                val encryptedMessage = encryptMessage(content.message, studentKey, studentIv)
+                val encryptedContent = content.copy(message = encryptedMessage, senderIp = "192.168.49.1")
+                val newcontentAsStr: String = Gson().toJson(encryptedContent)
                 clientMap.forEach { (ip, socket) ->
                     if (socket.isConnected) {
+                        Log.e("SERVER", "Sending message to client $ip")
                         val writer = socket.outputStream.bufferedWriter()
-                        writer.write("$contentAsStr\n")
+                        writer.write("$newcontentAsStr\n")
                         writer.flush()
                     } else {
                         Log.e("SERVER", "Client $ip is not connected.")
