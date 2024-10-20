@@ -160,15 +160,6 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
         }
     }
 
-//    fun sendMessage(view: View) {
-//        val etMessage:EditText = findViewById(R.id.etMessage)
-//        val etString = etMessage.text.toString()
-//        val content = ContentModel(etString, deviceIp)
-//        etMessage.text.clear()
-//        client?.sendMessage(content)
-//        chatListAdapter?.addItemToEnd(content)
-//
-//    }
 
     fun serverSendMessage(view: View){
         val sMessage: EditText = findViewById(R.id.etMessage)
@@ -253,9 +244,8 @@ class CommunicationActivity : AppCompatActivity(), WifiDirectInterface, PeerList
     override fun onContent(content: ContentModel) {
         runOnUiThread{
             chatListAdapter?.addItemToEnd(content)
-//            val  newStudent = Student(content. senderIp,"Petunia")
+            updateUI()
         }
-        updateUI()
     }
 
 }
